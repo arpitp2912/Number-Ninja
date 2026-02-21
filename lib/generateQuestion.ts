@@ -27,31 +27,125 @@ function createOptions(correct:number){
 
 export function generateQuestion(streak:number):Question{
 
-  const easy = streak < 20
-
   const rand=(min:number,max:number)=>
     Math.floor(Math.random()*(max-min+1))+min
+
+  // ----------------------------
+  // Difficulty Tier Selection
+  // ----------------------------
+  // 70% easy, 20% medium, 10% tricky
+  const roll = Math.random()
+  const tier =
+    roll < 0.7 ? "easy" :
+    roll < 0.9 ? "medium" :
+    "tricky"
 
   let a:number,b:number,op:string,expr:string,ans:number
 
   do{
-    if(easy){
-      a=rand(1,9)
-      b=rand(1,9)
-    }else{
-      a=rand(10,99)
-      b=rand(1,50)
+
+    // ----------------------------
+    // 🟢 STREAK 0–5 (Warmup)
+    // small numbers, avoid borrow where possible
+    // ----------------------------
+    if(streak <= 5){
+      a = rand(1,9)
+      b = rand(1,9)
+      op = Math.random()<0.6?"+":"-"
+
+      if(op==="-"){
+        if(a<b)[a,b]=[b,a]
+        ans=a-b
+        expr=`${a} - ${b}`
+      }else{
+        ans=a+b
+        expr=`${a} + ${b}`
+      }
     }
 
-    op=Math.random()<0.5?"+":"-"
+    // ----------------------------
+    // 🟡 STREAK 6–15 (Flow)
+    // allow carry / borrow lightly
+    // ----------------------------
+    else if(streak <= 15){
+      a = rand(1,20)
+      b = rand(1,20)
+      op = Math.random()<0.5?"+":"-"
 
-    if(op==="-"){
-      if(a<b)[a,b]=[b,a]
-      ans=a-b
-      expr=`${a} - ${b}`
-    }else{
-      ans=a+b
-      expr=`${a} + ${b}`
+      if(op==="-"){
+        if(a<b)[a,b]=[b,a]
+        ans=a-b
+        expr=`${a} - ${b}`
+      }else{
+        ans=a+b
+        expr=`${a} + ${b}`
+      }
+    }
+
+    // ----------------------------
+    // 🟠 STREAK 16–35 (Engagement)
+    // introduce boundary crossing
+    // ----------------------------
+    else if(streak <= 35){
+
+      if(tier==="easy"){
+        a = rand(5,20)
+        b = rand(1,10)
+      }
+      else if(tier==="medium"){
+        a = rand(10,40)
+        b = rand(5,20)
+      }
+      else{
+        // tricky: near 10 boundary
+        const base = rand(10,30)
+        a = base + rand(7,9)
+        b = rand(6,9)
+      }
+
+      op = Math.random()<0.5?"+":"-"
+
+      if(op==="-"){
+        if(a<b)[a,b]=[b,a]
+        ans=a-b
+        expr=`${a} - ${b}`
+      }else{
+        ans=a+b
+        expr=`${a} + ${b}`
+      }
+    }
+
+    // ----------------------------
+    // 🔴 STREAK 36+ (Ninja Mode)
+    // deceptive but fast-solvable
+    // ----------------------------
+    else{
+
+      if(tier==="easy"){
+        a = rand(10,30)
+        b = rand(5,15)
+      }
+      else if(tier==="medium"){
+        a = rand(20,50)
+        b = rand(10,25)
+      }
+      else{
+        // tricky patterns like 29+11 or 41-19
+        const base = rand(20,40)
+        a = base + rand(8,9)
+        b = rand(9,11)
+      }
+
+      op = Math.random()<0.5?"+":"-"
+
+      if(op==="-"){
+        if(a<b)[a,b]=[b,a]
+        ans=a-b
+        expr=`${a} - ${b}`
+      }else{
+        ans=a+b
+        expr=`${a} + ${b}`
+      }
     }
 
   }while(expr===lastExpression)
